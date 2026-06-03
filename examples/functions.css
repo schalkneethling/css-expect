@@ -1,0 +1,11 @@
+@function --double(--value <length>) returns <length> {
+  result: calc(var(--value) * 2);
+}
+
+@function --brand-color() returns <color> {
+  result: rgb(12 90 180);
+}
+
+@function --space-plus-gap(--value <length>) returns <length> {
+  result: calc(var(--value) + var(--gap));
+}
