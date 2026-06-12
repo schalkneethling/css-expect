@@ -8,22 +8,36 @@ const cssFile = join(__dirname, "functions.css");
 const css = await createCssExpect({
   browser: "chromium",
   files: [cssFile],
+  unsupported: "skip",
 });
 
 try {
   const support = await css.features();
 
-  console.log(`Browser supports CSS custom functions: ${support.functionRules}`);
+  if (!support.functionRules) {
+    console.log("Browser does not support CSS custom functions. Skipping expectations.");
+  } else {
+    console.log(`Browser supports CSS custom functions: ${support.functionRules}`);
 
-  await css.function("--double", ["4px"]).as("width").equals("8px");
-  await css.function("--brand-color", []).as("color").equals("rgb(12, 90, 180)");
-  await css
-    .function("--space-plus-gap", ["6px"])
-    .with({ "--gap": "2px" })
-    .as("margin-left")
-    .equals("8px");
+    await css.function("--double", ["4px"]).as("inline-size").equals("8px");
+    await css
+      .function("--apply-shadow", ["rgb(12, 90, 180)"])
+      .as("box-shadow")
+      .matches(matchesExpectedShadow);
+    await css
+      .function("--space-plus-gap", ["6px"])
+      .with({ "--gap": "2px" })
+      .as("margin-inline-start")
+      .equals("8px");
 
-  console.log("CSS function expectations passed.");
+    console.log("CSS function expectations passed.");
+  }
 } finally {
   await css.close();
+}
+
+function matchesExpectedShadow(actual) {
+  // Check the stable parts of the computed box-shadow; browsers may include
+  // extra normalized values such as spread radius or reorder whitespace.
+  return actual.includes("rgb(12, 90, 180)") && actual.includes("0px 2px 4px");
 }

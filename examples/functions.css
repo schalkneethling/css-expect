@@ -1,9 +1,14 @@
-@function --double(--value <length>) returns <length> {
-  result: calc(var(--value) * 2);
+@function --apply-shadow(--color <color>) {
+  --blur: 4px;
+  result: --build-shadow();
 }
 
-@function --brand-color() returns <color> {
-  result: rgb(12 90 180);
+@function --build-shadow() {
+  result: 0 2px var(--blur) var(--color);
+}
+
+@function --double(--value <length>) returns <length> {
+  result: calc(var(--value) * 2);
 }
 
 @function --space-plus-gap(--value <length>) returns <length> {

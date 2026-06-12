@@ -1,6 +1,7 @@
 import { mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vite-plus/test";
 import {
   buildFunctionExpectationCss,
@@ -10,6 +11,8 @@ import {
   CssExpectUnsupportedError,
   loadCssExpectSource,
 } from "../src/index.ts";
+
+const exampleFunctionsFile = fileURLToPath(new URL("../examples/functions.css", import.meta.url));
 
 describe("CSS expectation generation", () => {
   test("builds custom CSS function calls", () => {
@@ -23,12 +26,17 @@ describe("CSS expectation generation", () => {
 
   test("builds function expectation CSS with call-site custom properties", () => {
     expect(
-      buildFunctionExpectationCss("css-expect-subject-1", "--space(var(--gap))", "margin-left", {
-        "--gap": "4px",
-      }),
+      buildFunctionExpectationCss(
+        "css-expect-subject-1",
+        "--space(var(--gap))",
+        "margin-inline-start",
+        {
+          "--gap": "4px",
+        },
+      ),
     ).toBe(`.css-expect-subject-1 {
   --gap: 4px;
-  margin-left: --space(var(--gap));
+  margin-inline-start: --space(var(--gap));
 }`);
   });
 
@@ -117,7 +125,7 @@ describe("browser runtime", () => {
     }
 
     try {
-      const result = await css.function("--identity", ["1px"]).as("width").equals("1px");
+      const result = await css.function("--identity", ["1px"]).as("inline-size").equals("1px");
       const support = await css.features();
 
       expect(result.skipped).toBe(!support.functionRules);
@@ -204,13 +212,13 @@ describe("browser runtime", () => {
       const support = await css.features();
 
       if (!support.functionRules) {
-        const result = await css.function("--double", ["4px"]).as("width").equals("8px");
+        const result = await css.function("--double", ["4px"]).as("inline-size").equals("8px");
         expect(result.skipped).toBe(true);
         return;
       }
 
       await expect(
-        css.function("--double", ["4px"]).as("width").equals("8px"),
+        css.function("--double", ["4px"]).as("inline-size").equals("8px"),
       ).resolves.toMatchObject({
         actual: "8px",
         passed: true,
@@ -219,6 +227,56 @@ describe("browser runtime", () => {
         css.function("--brand-color", []).as("color").equals("rgb(12, 90, 180)"),
       ).resolves.toMatchObject({
         actual: "rgb(12, 90, 180)",
+        passed: true,
+      });
+    } finally {
+      await css.close();
+    }
+  });
+
+  test("expects richer example CSS functions with the Vite+ test runner", async () => {
+    const css = await maybeCreateCssExpect({
+      files: [exampleFunctionsFile],
+      unsupported: "skip",
+    });
+
+    if (css === undefined) {
+      return;
+    }
+
+    try {
+      const support = await css.features();
+
+      if (!support.functionRules) {
+        const result = await css.function("--double", ["4px"]).as("inline-size").equals("8px");
+        expect(result.skipped).toBe(true);
+        return;
+      }
+
+      await expect(
+        css.function("--double", ["4px"]).as("inline-size").equals("8px"),
+      ).resolves.toMatchObject({
+        actual: "8px",
+        passed: true,
+      });
+
+      await expect(
+        css
+          .function("--apply-shadow", ["rgb(12, 90, 180)"])
+          .as("box-shadow")
+          .matches(matchesExpectedShadow),
+      ).resolves.toMatchObject({
+        passed: true,
+      });
+
+      await expect(
+        css
+          .function("--space-plus-gap", ["6px"])
+          .with({ "--gap": "2px" })
+          .as("margin-inline-start")
+          .equals("8px"),
+      ).resolves.toMatchObject({
+        actual: "8px",
         passed: true,
       });
     } finally {
@@ -279,4 +337,10 @@ function isMissingBrowserError(error: unknown) {
   return (
     error instanceof Error && /Executable doesn't exist|browserType.launch/.test(error.message)
   );
+}
+
+function matchesExpectedShadow(actual: string) {
+  // Check the stable parts of the computed box-shadow; browsers may include
+  // extra normalized values such as spread radius or reorder whitespace.
+  return actual.includes("rgb(12, 90, 180)") && actual.includes("0px 2px 4px");
 }
