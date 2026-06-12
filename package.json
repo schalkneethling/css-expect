@@ -50,7 +50,8 @@
     "bumpp": "^11.1.0",
     "publint": "^0.3.15",
     "typescript": "^6.0.3",
-    "vite-plus": "^0.1.20"
+    "vite-plus": "^0.1.20",
+    "vitest": "latest"
   },
   "overrides": {
     "vite": "npm:@voidzero-dev/vite-plus-core@latest",
