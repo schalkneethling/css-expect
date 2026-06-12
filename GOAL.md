@@ -28,13 +28,12 @@ css-expect should make it practical to write small, trustworthy tests for native
 
 ## Non-Goals
 
-- css-expect is not a CSS parser, compiler, transpiler, optimizer, or polyfill.
-- css-expect should not make unsupported CSS features work in browsers that do not implement them.
-- css-expect should not replace Vitest, Playwright Test, or any general-purpose test runner.
-- css-expect should not become a broad DOM assertion library, a complete CSS feature-detection framework, or a full suite of CSS assertions and expectations.
-- css-expect should stay focused on testing CSS logic such as custom function results and, when the platform supports them, mixin return values.
-- css-expect should not hide browser differences behind normalization that changes the meaning of computed CSS.
-- css-expect should not add large framework integrations until the core browser-backed expectation model is proven useful.
+- Not a CSS parser, compiler, transpiler, optimizer, polyfill, or way to make unsupported CSS features work in browsers that do not implement them.
+- Focused on testing CSS logic: custom function results now, and mixin return values when the platform supports them.
+- Not a replacement for Vitest, Playwright Test, or another test runner, and not a home for broad runner or framework-specific APIs.
+- Not a broad DOM assertion library, complete CSS feature-detection framework, or full suite of CSS assertions and expectations.
+- Avoids normalizing computed styles in ways that hide meaningful browser differences.
+- Defers large framework integrations until the core browser-backed expectation model is proven useful.
 
 ## Principles and Constraints
 
